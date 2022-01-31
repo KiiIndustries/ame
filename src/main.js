@@ -25,8 +25,7 @@ Context.fillRect(10,10,80,80);
 // reference easily in the future
 const Mouse = {
     x: 0,
-    y: 0,
-    held: false
+    y: 0
 }
 // Now to track where the mouse is on screen, let's add
 // an event listener to the canvas
