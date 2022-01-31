@@ -1,10 +1,15 @@
 console.log("Hello World!");
 
+CONFIG = {
+    HEIGHT: 600,
+    WIDTH:  800
+}
+
 // First let's create the Canvas and Context the user will
 // interact with
 const Canvas  = document.createElement("CANVAS");
-Canvas.width  = 100;
-Canvas.Height = 100;
+Canvas.width  = CONFIG.HEIGHT;
+Canvas.Height = CONFIG.WIDTH;
 const Context = Canvas.getContext("2d");
 // Then we can go ahead and add them to the document.
 document.body.appendChild(Canvas);
