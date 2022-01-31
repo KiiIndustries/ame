@@ -34,6 +34,10 @@ Canvas.addEventListener("mousemove", function (evn) {
     // the current info
     Mouse.x = evn.offsetX
     Mouse.y = evn.offsetY
+    // These were added later, don't worry about them
+    // for now!
+    hoverCheck()
+    updateScreen()
 })
 // We also need to track if the user has clicked on something, so let's go ahead and do that now!
 Canvas.addEventListener("mousedown", function (evn) {
@@ -65,12 +69,13 @@ const Element = function (template) {
 
     // Now we need a way to actually display this element.
     // While I personally prefer Data-Oriented Design, ame
-    // will be optimized for my time rather than performance
+    // will be optimized for time rather than performance.
     // With that being said let's add the draw function!
     this.draw = function () {
         Context.fillStyle = this.c
         Context.fillRect(this.x, this.y, this.w, this.h)
     }
+    this.traits = {}
 }
 // Now let's test if this all worked!
 const BlueBoxTemplate = {
@@ -85,3 +90,102 @@ const BlueBoxTemplate = {
 const BlueBox = new Element(BlueBoxTemplate)
 
 BlueBox.draw()
+
+// Great, now that we know it all works let's go ahead
+// and add a container to hold all the Elements we may
+// want to create!
+
+const Elements = []
+
+// Then we can add our entity
+Elements.push(BlueBox)
+
+// Now let's go ahead and add an option to include a bit
+// of interactivity to an Element by adding what happens
+// if the mouse hovers over an element
+const addHover = function (element, hover, leave) {
+    // First thing's first, let's add to the element
+    // some way for us to check if it has the hover
+    // trait at all. We'll also add "traits" to the
+    // original constructor
+    element.traits["hover"] = true
+    element.hovered         = false
+    // First we'll take an element and assign an action
+    // to it when the mouse is 'hover'ing over it
+    element["hover"] = hover || function () {
+        this.hovered = true
+        this.c     = "red"
+    }
+    // as well as an action when the mouse is no longer
+    // hovering over it
+    element["leave"] = leave || function () {
+        this.hovered = false
+        this.c = "green"
+    }
+}
+// Now we need to figure out how we're going to go about
+// letting the element know that the mouse is hovering over
+// it! First up we need a simple way to detect if a point
+// is inside an area which we can create with the following
+const checkInside = function (point, area) {
+    return (
+        point.x >= area.x &&
+        point.x <= area.x + area.w &&
+        point.y >= area.y &&
+        point.y <= area.y + area.h
+    )
+}
+// With that done we can go ahead and apply this function
+// to a more general check
+const hoverCheck = function () {
+    // First we'll search through all the elements
+    for (const e in Elements) {
+        let element = Elements[e]
+        // Skip any elements that don't have the hover trait
+        if (!element.traits["hover"]) { continue }
+        // Then check if the mouse and element are colliding
+        if (checkInside(Mouse, element)) {
+            // If it is inside, we'll first check to make
+            // sure it isn't already hovered over
+            if (element.hovered) { continue }
+            // Finally if it isn't being hovered we'll
+            // trigger the hover
+            element.hover()
+        } else {
+            // Now if it isn't inside, there's a possibility
+            // that element has been left by the mouse, so
+            // we'll go ahead and check that.
+            if (!element.hovered) { continue }
+            // If we made it this far, the element must have
+            // been left
+            element.leave()
+        }
+    }
+}
+// Now we need a way to see changes so we'll go ahead and
+// create a function that will wipe the screen and redraw
+// all the elements on it!
+const updateScreen = function () {
+    Context.clearRect(0,0,CONFIG.WIDTH, CONFIG.HEIGHT)
+    for (const e in Elements) {
+        let element = Elements[e]
+        element.draw()
+    }
+}
+
+// Now let's create a new element for the array and then
+// add the hover trait to it!
+const HoverTemplate = {
+    name: "Hoverable Element",
+    desc: "We can hover over this element to change color!",
+
+    x: 100,
+    y: 100,
+    w: 20,
+    h: 20,
+    c: "gray"
+}
+// Then create the actual element
+let HoverBox = new Element(HoverTemplate)
+addHover(HoverBox)
+Elements.push(HoverBox)
