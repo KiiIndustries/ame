@@ -44,6 +44,10 @@ Canvas.addEventListener("mousedown", function (evn) {
     // Only do something if the button pressed is 0 (LMB)
     if (evn.button != 0) { return }
     console.log(`X: ${evn.offsetX}, Y: ${evn.offsetY}`)
+    // These were added later, don't worry about them
+    // for now!
+    clickCheck()
+    updateScreen()
 })
 
 // Our scene is currently kind of boring though, so let's
@@ -189,3 +193,35 @@ const HoverTemplate = {
 let HoverBox = new Element(HoverTemplate)
 addHover(HoverBox)
 Elements.push(HoverBox)
+
+// Now that we've got a hoverable box, let's go ahead
+// and add a clickable box! Luckily we already have
+// most of the code we need for that.
+const addClick   = function (element, click) {
+    element.traits["click"] = true
+    element["click"] = click || function () {
+        console.log(`${this.name} was clicked!`)
+    }
+}
+const clickCheck = function () {
+    for (const e in Elements) {
+        let element = Elements[e]
+        if (!element.traits["click"])     { continue }
+        if (!checkInside(Mouse, element)) { continue }
+        element.click()
+    }
+}
+const clickTemplate = {
+    name: "Clickable Element",
+    desc: "Clicking on this should do something fun!",
+
+    x: 110,
+    y: 110,
+    w: 100,
+    h: 100,
+    c: "yellow"
+}
+
+let ClickBox = new Element(clickTemplate)
+addClick(ClickBox)
+Elements.push(ClickBox)
