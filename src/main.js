@@ -41,3 +41,47 @@ Canvas.addEventListener("mousedown", function (evn) {
     if (evn.button != 0) { return }
     console.log(`X: ${evn.offsetX}, Y: ${evn.offsetY}`)
 })
+
+// Our scene is currently kind of boring though, so let's
+// add some objects we can interact with we'll call Element
+
+const Element = function (template) {
+    // First up let's make sure Javascript doesn't get mad
+    // at us if we don't pass it a template
+    template  = template      || {}
+    // Then we'll give our Element a name and description
+    // for debugging later should we need it
+    this.name = template.name || "Default Element Name"
+    this.desc = template.desc || "An unremarkable Element"
+    // Now we need to define where the element is on screen
+    // so let's go ahead and add that now
+    this.x = template.x || 0
+    this.y = template.y || 0
+    // We'll need some dimensions of the element as well
+    this.w = template.w || 10
+    this.h = template.h || 10
+    // Aaaand a color!
+    this.c = template.c || "black"
+
+    // Now we need a way to actually display this element.
+    // While I personally prefer Data-Oriented Design, ame
+    // will be optimized for my time rather than performance
+    // With that being said let's add the draw function!
+    this.draw = function () {
+        Context.fillStyle = this.c
+        Context.fillRect(this.x, this.y, this.w, this.h)
+    }
+}
+// Now let's test if this all worked!
+const BlueBoxTemplate = {
+    name: "Our Blue Box",
+    desc: "A Element we're using to make sure this works!",
+    x: 30,
+    y: 10,
+    w: 100,
+    h: 12,
+    c: "blue"
+}
+const BlueBox = new Element(BlueBoxTemplate)
+
+BlueBox.draw()
