@@ -225,3 +225,45 @@ const clickTemplate = {
 let ClickBox = new Element(clickTemplate)
 addClick(ClickBox)
 Elements.push(ClickBox)
+
+// Now let's do something a bit radical and create
+// an image Element! Instead of just filling in a box
+// with a boring color, it'll display an image!
+const addImage = function (element, file) {
+    // First up we'll need to load the image
+    element.image      = new Image()
+    element.image.src  = file || "assets/art/default.png"
+    // Javascript is non-blocking meaning we'll have to
+    // "wait" until the image is done loading to continue!
+    element.image.onload = function () {
+    // Once it's loaded, we can convert the image into a 
+    // canvas for reasons which will become clear a bit
+    // later on
+    element.canvas = document.createElement("CANVAS")
+    element.canvas.width  = element.image.width
+    element.canvas.height = element.image.height
+    element.context = element.canvas.getContext("2d")
+    element.context.drawImage(element.image, 0 , 0)
+    // With that insanity out of the way let's continue on
+    // by going ahead and adding image to the traits
+    element.traits["image"] = true
+    // and updating the draw function to take into account
+    // the fact that we'll be drawing imagedata instead!
+    element.draw = function () {
+        Context.drawImage(this.canvas, this.x, this.y)
+    }
+    } // closing the onload
+}
+// Now let's add it!
+const ImgTemp = {
+    name: "Image Element",
+    desc: "Checking to see if the image works!",
+
+    x: 200,
+    y: 200,
+    w: 100,
+    h: 100
+}
+let ImgBox = new Element(ImgTemp)
+addImage(ImgBox)
+Elements.push(ImgBox)
