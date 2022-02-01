@@ -1,12 +1,11 @@
-console.log("Hello World!");
 // Config creation
-CONFIG = {
+const CONFIG = {
     HEIGHT: 600,
     WIDTH:  800,
     FPS:     60,
 }
 // Loading details
-Loading = 0
+let Loading = 0
 // Utility Functions
 const Utils = {
     checkInside: function (point, area) {
@@ -360,7 +359,7 @@ const Templates = {
                 ])
             } else {
                 this.recolor([
-                    [143,  56,  89,  96],
+                    [143,  86,  59,  96],
                     [  0,   0,   0,   0]
                 ])
             }
@@ -369,14 +368,13 @@ const Templates = {
     }
 }
 
-
-
 // Testing
 let ImageElement = new Element(Templates.ImageBox)
 let ClickElement = new Element(Templates.ClickBox)
 let HoverElement = new Element(Templates.HoverBox)
 let PlainElement = new Element(Templates.BlueBox)
 let WeirdElement = new Element(Templates.WeirdBox)
+
 Elements.push(
     ImageElement,
     ClickElement,
