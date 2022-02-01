@@ -348,3 +348,48 @@ const paletteGen = function (canvas) {
 
 // Obviously we have to test it! Let's see what we get when
 // we add it to the addImage function!
+
+// Now that we can make palettes, let's make a function that
+// gives an image the ability recolor itself!
+const addRecolor = function (element) {
+    // First a bit of type checking
+    if (!element.traits["image"]) {
+        console.log("You're trying to add recoloring to something that isn't an image!!")
+        return
+    }
+    // now let's sadd our own trait
+    element.traits["recolor"] = true
+    // And the way we'll recolor things!
+    let palette = element.palette
+    element.recolor = function (newPalette) {
+        if (newPalette.length != this.palette.length) {
+            console.log("Mismatched Palettes~")
+            return
+        }
+        let i = this.context.getImageData( 0, 0,
+            this.canvas.width, this.canvas.height
+        )
+        let palette = this.palette
+        for (let pix = 0; pix < i.data.length; pix += 4) {
+            if (i.data[pix + 3] != 255 ) { continue }
+            for (let c = 0; c < palette.length; c++) {
+                if (
+                    palette[c][0] == i.data[pix + 0] &&
+                    palette[c][1] == i.data[pix + 1] &&
+                    palette[c][2] == i.data[pix + 2]
+                ) {
+                    i.data[pix + 0] = newPalette[c][0]
+                    i.data[pix + 1] = newPalette[c][1]
+                    i.data[pix + 2] = newPalette[c][2]
+                    i.data[pix + 3] = 255
+                }
+            }
+        }
+        this.context.clearRect(0, 0,
+            this.canvas.width, this.canvas.height
+        )
+        console.log(i)
+        this.context.putImageData(i, 0, 0)
+        this.palette = newPalette
+    }
+}
