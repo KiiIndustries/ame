@@ -247,11 +247,11 @@ const addImage = function (element, file) {
     // With that insanity out of the way let's continue on
     // by going ahead and adding image to the traits
     element.traits["image"] = true
-    // and updating the draw function to take into account
-    // the fact that we'll be drawing imagedata instead!
+    // and updating the draw function 
     element.draw = function () {
         Context.drawImage(this.canvas, this.x, this.y)
     }
+    console.log(paletteGen(ImgBox.image))
     } // closing the onload
 }
 // Now let's add it!
@@ -267,3 +267,92 @@ const ImgTemp = {
 let ImgBox = new Element(ImgTemp)
 addImage(ImgBox)
 Elements.push(ImgBox)
+
+// Here comes the last bit we'll need to really make ame
+// stand out compared to the others! We'll go ahead and 
+// add something that'll recolor images meaning unlimited
+// color possibilities!
+// First off let's create a color palette generator, that
+// way we know what colors a file has!
+const paletteGen = function (image) {
+    // According to https://stackoverflow.com/questions/10754661/javascript-getting-imagedata-without-canvas
+    // there's unfortunately no way to just get the image
+    // data from an image (Javascript why??) so we'll
+    // have to do some silly stuff to get around it
+    let canvas = document.createElement("canvas")
+    let context = canvas.getContext("2d")
+    canvas.height = image.height
+    canvas.width  = image.width
+    context.drawImage(image, 0, 0)
+    let imgData = context.getImageData( 0, 0,
+        image.width, image.height
+    )
+    // Phew, now that we've got the image data we'll need
+    // to add all the colors in it to a palette so let's
+    // first create the palette
+    let palette = []
+    // Then we'll loop through the data
+    let data = imgData.data
+    let track = 0
+    loop:
+    for (let pixel = 0; pixel < data.length; pixel += 4) {
+        // imageData has 4 values, (red, green, blue, alpha)
+        // so we'll step through the data 4 indexes at a
+        // time and create an array that holds the rgb
+        // values, (we'll ignore alpha for now) called color
+
+        // Before anything else though, let's ignore
+        // transparent pixels, we don't need them
+        if (data[pixel + 3] != 255) { continue }
+        let color = [
+            data[pixel + 0],
+            data[pixel + 1],
+            data[pixel + 2],
+            // Now we need a way to sort colors in our
+            // palette, so on top of the 3 color values
+            // we'll add a fourth one that corresponds
+            // to average brightness.
+            Math.round(
+                (
+                    data[pixel + 0] +
+                    data[pixel + 1] +
+                    data[pixel + 2]
+                ) / 3
+            )
+        ]
+        // If it doesn't, we'll need to add it based on
+        // it's brightness which is easy enough to do! First
+        // let's figure out where we need to slot it with a
+        // simple linear search (we don't need a binary
+        // search because the color palettes should be tiny)
+        let index = 0
+        while (index < palette.length) {
+            // First let's check if the color is in the
+            // palette, if it is we don't need to add it
+            // We could have used an .includes() earlier
+            // but I imagine that's iterating over the array
+            // anyway so let's kill two birds with one stone
+            // by adding it in here!
+            if (
+                color[0] == palette[index][0] &&
+                color[1] == palette[index][1] &&
+                color[2] == palette[index][2]
+            ) { continue loop }
+            // Now let's check if the color is brighter than
+            // the current palette color, if it, we've come
+            // to our stop!
+            if (color[3] >= palette[index][3]) { break }
+            // If it isn't, we'll go ahead and increment the
+            // index and try again
+            index += 1
+        }
+        // Now that we know where to stick the color in the 
+        // palette, let's go ahead and add it!
+        palette.splice(index, 0, color)
+    }
+    // Finally  we have our palette! Let's just return it
+    return palette
+}
+
+// Obviously we have to test it! Let's see what we get when
+// we add it to the addImage function!
