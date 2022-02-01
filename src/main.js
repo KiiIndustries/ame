@@ -251,7 +251,7 @@ const addImage = function (element, file) {
     element.draw = function () {
         Context.drawImage(this.canvas, this.x, this.y)
     }
-    console.log(paletteGen(ImgBox.image))
+    element.palette = paletteGen(ImgBox.canvas)
     } // closing the onload
 }
 // Now let's add it!
@@ -274,20 +274,12 @@ Elements.push(ImgBox)
 // color possibilities!
 // First off let's create a color palette generator, that
 // way we know what colors a file has!
-const paletteGen = function (image) {
-    // According to https://stackoverflow.com/questions/10754661/javascript-getting-imagedata-without-canvas
-    // there's unfortunately no way to just get the image
-    // data from an image (Javascript why??) so we'll
-    // have to do some silly stuff to get around it
-    let canvas = document.createElement("canvas")
+const paletteGen = function (canvas) {
     let context = canvas.getContext("2d")
-    canvas.height = image.height
-    canvas.width  = image.width
-    context.drawImage(image, 0, 0)
     let imgData = context.getImageData( 0, 0,
-        image.width, image.height
+        canvas.width, canvas.height
     )
-    // Phew, now that we've got the image data we'll need
+    // Now that we've got the image data we'll need
     // to add all the colors in it to a palette so let's
     // first create the palette
     let palette = []
