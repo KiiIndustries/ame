@@ -273,11 +273,6 @@ const Traits = {
                         }
                     }
                 }
-                // Refresh the canvas
-                this.context.clearRect(
-                    0, 0,
-                    this.canvas.width, this.canvas.height
-                )
                 this.context.putImageData(i, 0, 0)
                 this.palette = newPal
                 // Queue an update
