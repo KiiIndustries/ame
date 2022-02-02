@@ -8,6 +8,7 @@ const CONFIG = {
 let Loading = 0
 // Utility Functions
 const Utils = {
+    // Checks if something's inside
     checkInside: function (point, area) {
         return (
             point.x >= area.x &&
@@ -16,6 +17,7 @@ const Utils = {
             point.y <= area.y + area.h
         )
     },
+    // Generate a palette
     palGen: function (canvas) {
         let context = canvas.getContext("2d")
         let imgData = context.getImageData( 0, 0,
@@ -58,6 +60,28 @@ const Utils = {
             palette.splice(index, 0, color)
         }
         return palette
+    },
+    // Substitutes a targetColor with a replacementColor
+    // NOTE: DOESN'T UPDATE PALETTES
+    subCol: function (canvas, tarCol, repCol) {
+        let context = canvas.getContext("2d")
+        let imgData = context.getImageData( 0, 0,
+            canvas.width, canvas.height
+        )
+        let data = imgData.data
+        for (let p = 0; p < data.length; p += 4) {
+            if (data[p + 3] !== 255) { continue }
+            if (
+                data[p + 0] == tarCol[0] &&
+                data[p + 1] == tarCol[1] &&
+                data[p + 2] == tarCol[2]
+            ) {
+                imgData.data[p + 0] = repCol[0]
+                imgData.data[p + 1] = repCol[1]
+                imgData.data[p + 2] = repCol[2]
+            }
+        }
+        this.context.putImageData(imageData, 0, 0)
     }
 }
 // Canvas creation
