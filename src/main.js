@@ -272,7 +272,7 @@ const Traits = {
                             i.data[p + 2] = newPal[c][2]
                         }
                     }
-                }
+                } 
                 this.context.putImageData(i, 0, 0)
                 this.palette = newPal
                 // Queue an update
