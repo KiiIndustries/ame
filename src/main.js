@@ -1,8 +1,8 @@
 // Config creation
 const CONFIG = {
-    HEIGHT: 600,
-    WIDTH:  800,
-    FPS:     60,
+    HEIGHT: 0x200,
+    WIDTH:  0x300,
+    FPS:       60,
 }
 // Loading details
 let Loading = 0
@@ -16,6 +16,9 @@ const Utils = {
             point.y >= area.y &&
             point.y <= area.y + area.h
         )
+    },
+    copy: function (target) {
+        return JSON.parse(JSON.stringify(target))
     },
     // Generate a palette
     palGen: function (canvas) {
@@ -203,37 +206,76 @@ const Traits = {
                 if (Utils.checkInside(Mouse, this)) {
                     return
                 }
+                this.mouseOver = false
                 this.abandon()
             } else {
                 if (Utils.checkInside(Mouse, this)) {
+                    this.mouseOver = true
                     this.hover()
                 }
                 return
             }
         },
         hover: function () {
-            this.mouseOver = true
             console.log(`${this.name} is being hovered!`)
         },
         abandon: function () {
-            this.mouseOver = false
             console.log(`${this.name} was abandoned!`)
         }
     },
     Image: {
         init: function (template, element) {
             let image = new Image()
-            image.src = template.file || "assets/art/default.png"
+            image.src = template.src || "graphics/default.png"
+            element.frame = template.frame || 0
+            element.sx = template.sx ||   0
+            element.sy = template.sy ||   0
+            element.sw = template.sw || element.w
+            element.sh = template.sh || element.h
             Loading += 1
             image.onload = function () {
                 element.canvas = document.createElement("canvas")
-                element.canvas.width  = image.width
-                element.canvas.height = image.height
+                element.canvas.width  = element.sw
+                element.canvas.height = element.sh
                 element.context = element.canvas.getContext("2d")
-                element.context.drawImage(image, 0, 0)
-                element.palette = Utils.palGen(element.canvas) 
+                element.context.drawImage(
+                    image,
+                    element.sx,
+                    element.sy,
+                    element.sw,
+                    element.sh,
+                    0,
+                    0,
+                    element.sw,
+                    element.sh
+                )
+                element.image = document.createElement("canvas")
+                element.image.width  = image.width
+                element.image.height = image.height
+                let imgctx = element.image.getContext("2d")
+                imgctx.drawImage(image, 0, 0)
+                element.palette = template.palette || Utils.palGen(element.canvas) 
                 Loading -= 1
             }
+        },
+        rerender: function () {
+            // Wipe the old canvas
+            this.context.clearRect(
+                0, 0,
+                this.sw, this.sh
+            )
+            // Draw the new one
+            this.context.drawImage(
+                this.image,
+                this.sx + (this.frame * this.sw),
+                this.sy,
+                this.sw,
+                this.sh,
+                0,
+                0,
+                this.sw,
+                this.sh
+            )
         },
         draw: function () {
             Context.drawImage(
@@ -255,8 +297,9 @@ const Traits = {
                     console.log("Invalid Palette size!")
                     return
                 }
-                let i = this.context.getImageData( 0, 0,
-                    this.canvas.width, this.canvas.height
+                let context = this.image.getContext("2d")
+                let i = context.getImageData( 0, 0,
+                    this.image.width, this.image.height
                 )
                 let pal = this.palette
                 for (let p = 0; p < i.data.length; p+=4) {
@@ -272,132 +315,210 @@ const Traits = {
                             i.data[p + 2] = newPal[c][2]
                         }
                     }
-                } 
-                this.context.putImageData(i, 0, 0)
+                }
                 this.palette = newPal
-                // Queue an update
-                setTimeout(() => {
-                    Mouse.p = false
-                    Update()
-                }, 1000 / CONFIG.FPS)
+                context.putImageData(i, 0, 0)
+                this.rerender()
             } 
+        }
+    },
+    MultiLayer: {
+        init: function (template, element) {
+            element.layers = []
+            for (const l in template.layers) {
+                let layer = new Element (template.layers[l])
+                element.layers.push(layer)
+            }
+        },
+        update: function () {
+            for (const l in this.layers) {
+                this.layers[l].update()
+            }
+        }
+    },
+    Customized: {
+        init: function (template, element) {
+            template.customize(template, element)
         }
     }
 }
 // Element Templates
-const Templates = {
-    BlueBox: {
-        name: "Blue Box",
-        desc: "A simple element",
+const TEMPLATES = {
+    SMALL_BUTTON: {
+        name: "Small Button",
+        desc: "A small button",
 
-        x: 30,
-        y: 10,
-        w: 100,
-        h: 12,
+        x: 0x198,
+        y: 0x008,
+        w: 0x010,
+        h: 0x010,
 
-        c: "Blue"
-    },
-    HoverBox: {
-        name: "Hoverable Element",
-        desc: "We can hover over this element to change color!",
+        sx: 0x00,
+        sy: 0x00,
 
-        x: 100,
-        y: 100,
-        w: 20,
-        h: 20,
+        src: "graphics/ui/sheet.png",
 
-        c: "gray",
-
+        hover: function () {
+            if (this.pressed) { return }
+            this.frame = 2;
+            this.rerender()
+        },
+        abandon: function () {
+            if (this.pressed) { return }
+            this.frame = 0;
+            this.rerender()
+        },
+        click: function () {
+            if (this.pressed) {
+                this.pressed = false
+                this.frame = 0
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            } else {
+                this.pressed = true
+                this.frame = 1
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            }
+        },
         traits: [
-            "Hoverable"
-        ]
-    },
-    ClickBox: {
-        name: "Clickable Element",
-        desc: "Clicking on this should do something fun!",
-
-        x: 110,
-        y: 110,
-        w: 100,
-        h: 100,
-
-        c: "yellow",
-
-        traits: [
+            "Image",
+            "Hoverable",
             "Clickable"
         ]
     },
-    ImageBox: {
-        name: "Image Element",
-        desc: "This should display an image!",
+    BIG_BUTTON: {
+        name: "Small Button",
+        desc: "A small button",
 
-        x: 200,
-        y: 200,
-        w: 100,
-        h: 100,
+        x: 0x1B0,
+        y: 0x000,
+        w: 0x020,
+        h: 0x020,
 
+        sx: 0x00,
+        sy: 0x10,
+
+        src: "graphics/ui/sheet.png",
+
+        hover: function () {
+            if (this.pressed) { return }
+            this.frame = 2;
+            this.rerender()
+        },
+        abandon: function () {
+            if (this.pressed) { return }
+            this.frame = 0;
+            this.rerender()
+        },
+        click: function () {
+            if (this.pressed) {
+                this.pressed = false
+                this.frame = 0
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            } else {
+                this.pressed = true
+                this.frame = 1
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            }
+        },
         traits: [
-            "Image"
+            "Image",
+            "Hoverable",
+            "Clickable"
         ]
-
     },
-    WeirdBox: {
-        name: "Weird Element",
-        desc: "This should display an image!",
+    LONG_BUTTON: {
+        name: "Long Button",
+        desc: "A long button",
 
-        x: 100,
-        y: 200,
-        w:  50,
-        h:  50,
+        x: 0x188,
+        y: 0x090,
+        w: 0x010,
+        h: 0x040,
 
+        sx: 0x00,
+        sy: 0x30,
+
+        src: "graphics/ui/sheet.png",
+
+        hover: function () {
+            if (this.pressed) { return }
+            this.frame = 2;
+            this.rerender()
+        },
+        abandon: function () {
+            if (this.pressed) { return }
+            this.frame = 0;
+            this.rerender()
+        },
+        click: function () {
+            if (this.pressed) {
+                Mouse.p = false;
+                this.pressed = false
+                this.frame = 0
+                this.rerender()
+                Update()
+            } else {
+                this.pressed = true
+                Mouse.p = false;
+                this.frame = 1
+                this.swap++
+                this.recolor(this.palettes[this.swap % 2])
+                Update()
+            }
+        },
+        palette: [
+            [0x7e, 0x88, 0x8e, 135]
+        ],
+        customize: function (template, element) {
+            element.palettes = [
+                [
+                    [0x7e, 0x88, 0x8e, 135]
+                ],
+                [
+                    [0xa0, 0xbc, 0x7b, 157]
+                ]
+            ]
+            element.swap = 0
+        },
         traits: [
             "Image",
             "Hoverable",
             "Clickable",
-            "Recolorable"
-        ],
+            "Recolorable",
+            "Customized"
+        ]
+    },
+    UI_FRAME: {
+        name: "UI Frame",
+        desc: "Just the boilerplate of the UI",
 
-        hover: function () {
-            this.mouseOver = true
-            console.log("Pick Me!!")
-        },
-        abandon: function () {
-            this.mouseOver = false
-            console.log("Waaaa!!!!")
-        },
+        x: 0x180,
+        y: 0x000,
+        w: 0x180,
+        h: 0x200,
 
-        click: function () {
-            if (!this.clicks) {
-                this.clicks = 0
-            } 
-            this.clicks += 1
-            if (this.clicks % 2 == 0) {
-                this.recolor([
-                    [238, 195, 154, 196],
-                    [  0,   0,   0,   0]
-                ])
-            } else {
-                this.recolor([
-                    [143,  86,  59,  96],
-                    [  0,   0,   0,   0]
-                ])
-            }
-        }
+        sx: 0x180,
+        sy: 0x000,
 
+        src: "graphics/ui/sheet.png",
+
+        traits: [
+            "Image"
+        ]
     }
 }
 
-// Testing
-let ImageElement = new Element(Templates.ImageBox)
-let ClickElement = new Element(Templates.ClickBox)
-let HoverElement = new Element(Templates.HoverBox)
-let PlainElement = new Element(Templates.BlueBox)
-let WeirdElement = new Element(Templates.WeirdBox)
-
 Elements.push(
-    ImageElement,
-    ClickElement,
-    HoverElement,
-    PlainElement,
-    WeirdElement
+    new Element (TEMPLATES.UI_FRAME),
+    new Element (TEMPLATES.BIG_BUTTON),
+    new Element (TEMPLATES.LONG_BUTTON),
+    new Element (TEMPLATES.SMALL_BUTTON)
 )
