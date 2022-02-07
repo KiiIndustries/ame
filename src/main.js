@@ -322,6 +322,7 @@ const Traits = {
             } 
         }
     },
+    Layer: {},
     MultiLayer: {
         init: function (template, element) {
             element.layers = []
@@ -342,161 +343,25 @@ const Traits = {
         }
     }
 }
-// Element Templates
-const TEMPLATES = {
-    SMALL_BUTTON: {
-        name: "Small Button",
-        desc: "A small button",
-
-        x: 0x198,
-        y: 0x008,
-        w: 0x010,
-        h: 0x010,
-
-        sx: 0x00,
-        sy: 0x00,
-
-        src: "graphics/ui/sheet.png",
-
-        hover: function () {
-            if (this.pressed) { return }
-            this.frame = 2;
-            this.rerender()
-        },
-        abandon: function () {
-            if (this.pressed) { return }
-            this.frame = 0;
-            this.rerender()
-        },
-        click: function () {
-            if (this.pressed) {
-                this.pressed = false
-                this.frame = 0
-                this.rerender()
-                Mouse.p = false;
-                Update()
-            } else {
-                this.pressed = true
-                this.frame = 1
-                this.rerender()
-                Mouse.p = false;
-                Update()
-            }
-        },
-        traits: [
-            "Image",
-            "Hoverable",
-            "Clickable"
-        ]
-    },
-    BIG_BUTTON: {
-        name: "Small Button",
-        desc: "A small button",
-
-        x: 0x1B0,
-        y: 0x000,
-        w: 0x020,
-        h: 0x020,
-
-        sx: 0x00,
-        sy: 0x10,
-
-        src: "graphics/ui/sheet.png",
-
-        hover: function () {
-            if (this.pressed) { return }
-            this.frame = 2;
-            this.rerender()
-        },
-        abandon: function () {
-            if (this.pressed) { return }
-            this.frame = 0;
-            this.rerender()
-        },
-        click: function () {
-            if (this.pressed) {
-                this.pressed = false
-                this.frame = 0
-                this.rerender()
-                Mouse.p = false;
-                Update()
-            } else {
-                this.pressed = true
-                this.frame = 1
-                this.rerender()
-                Mouse.p = false;
-                Update()
-            }
-        },
-        traits: [
-            "Image",
-            "Hoverable",
-            "Clickable"
-        ]
-    },
-    LONG_BUTTON: {
-        name: "Long Button",
-        desc: "A long button",
-
-        x: 0x188,
-        y: 0x090,
-        w: 0x010,
-        h: 0x040,
-
-        sx: 0x00,
-        sy: 0x30,
-
-        src: "graphics/ui/sheet.png",
-
-        hover: function () {
-            if (this.pressed) { return }
-            this.frame = 2;
-            this.rerender()
-        },
-        abandon: function () {
-            if (this.pressed) { return }
-            this.frame = 0;
-            this.rerender()
-        },
-        click: function () {
-            if (this.pressed) {
-                Mouse.p = false;
-                this.pressed = false
-                this.frame = 0
-                this.rerender()
-                Update()
-            } else {
-                this.pressed = true
-                Mouse.p = false;
-                this.frame = 1
-                this.swap++
-                this.recolor(this.palettes[this.swap % 2])
-                Update()
-            }
-        },
-        palette: [
-            [0x7e, 0x88, 0x8e, 135]
-        ],
-        customize: function (template, element) {
-            element.palettes = [
-                [
-                    [0x7e, 0x88, 0x8e, 135]
-                ],
-                [
-                    [0xa0, 0xbc, 0x7b, 157]
-                ]
-            ]
-            element.swap = 0
-        },
-        traits: [
-            "Image",
-            "Hoverable",
-            "Clickable",
-            "Recolorable",
-            "Customized"
-        ]
-    },
-    UI_FRAME: {
+// UI Creation
+let UI_FRAME;
+// Category
+let CAT_LB;
+let CAT_RB;
+// Layer
+let LAY_LB;
+let LAY_RB;
+// Palette
+let PAL_RB;
+let PAL_LB;
+// Misc
+let AUD_BT;
+let MUS_BT;
+let SAV_BT;
+// I just wanna hide this for now
+{
+    // Frame
+    UI_FRAME = new Element ({
         name: "UI Frame",
         desc: "Just the boilerplate of the UI",
 
@@ -513,12 +378,524 @@ const TEMPLATES = {
         traits: [
             "Image"
         ]
-    }
+    })
+    // Category
+    CAT_LB = new Element ({
+        name: "Left Category Button",
+        desc: "Moves the Categories left",
+
+        x: 0x198,
+        y: 0x008,
+        w: 0x010,
+        h: 0x010,
+
+        sx: 0x00,
+        sy: 0x00,
+
+        src: "graphics/ui/sheet.png",
+
+        hover: function () {
+            if (this.pressed) { return }
+            this.frame = 1;
+            this.rerender()
+        },
+        abandon: function () {
+            if (this.pressed) { return }
+            this.frame = 0;
+            this.rerender()
+        },
+        click: function () {
+            if (this.pressed) {
+                this.pressed = false
+                this.frame = 0
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            } else {
+                this.pressed = true
+                this.frame = 2
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            }
+        },
+        traits: [
+            "Image",
+            "Hoverable",
+            "Clickable"
+        ]
+    })
+    CAT_RB = new Element ({
+        name: "Right Category Button",
+        desc: "Moves the Categories right",
+
+        x: 0x2d8,
+        y: 0x008,
+        w: 0x010,
+        h: 0x010,
+
+        sx: 0x00,
+        sy: 0x10,
+
+        src: "graphics/ui/sheet.png",
+
+        hover: function () {
+            if (this.pressed) { return }
+            this.frame = 1;
+            this.rerender()
+        },
+        abandon: function () {
+            if (this.pressed) { return }
+            this.frame = 0;
+            this.rerender()
+        },
+        click: function () {
+            if (this.pressed) {
+                this.pressed = false
+                this.frame = 0
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            } else {
+                this.pressed = true
+                this.frame = 2
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            }
+        },
+        traits: [
+            "Image",
+            "Hoverable",
+            "Clickable"
+        ]
+    })
+
+    // Layer
+    LAY_LB = new Element ({
+        name: "Left Layer Button",
+        desc: "Moves layers left",
+
+        x: 0x188,
+        y: 0x090,
+        w: 0x010,
+        h: 0x040,
+
+        sx: 0x00,
+        sy: 0x40,
+
+        src: "graphics/ui/sheet.png",
+
+        hover: function () {
+            if (this.pressed) { return }
+            this.frame = 1;
+            this.rerender()
+        },
+        abandon: function () {
+            if (this.pressed) { return }
+            this.frame = 0;
+            this.rerender()
+        },
+        click: function () {
+            if (this.pressed) {
+                Mouse.p = false;
+                this.pressed = false
+                this.frame = 0
+                this.rerender()
+                Update()
+            } else {
+                this.pressed = true
+                Mouse.p = false;
+                this.frame = 2
+                this.rerender()
+                Update()
+            }
+        },
+        traits: [
+            "Image",
+            "Hoverable",
+            "Clickable"
+        ]
+    })
+    LAY_RB = new Element ({
+        name: "Right Layer Button",
+        desc: "Moves layers right",
+
+        x: 0x2e8,
+        y: 0x090,
+        w: 0x010,
+        h: 0x040,
+
+        sx: 0x00,
+        sy: 0x80,
+
+        src: "graphics/ui/sheet.png",
+
+        hover: function () {
+            if (this.pressed) { return }
+            this.frame = 1;
+            this.rerender()
+        },
+        abandon: function () {
+            if (this.pressed) { return }
+            this.frame = 0;
+            this.rerender()
+        },
+        click: function () {
+            if (this.pressed) {
+                Mouse.p = false;
+                this.pressed = false
+                this.frame = 0
+                this.rerender()
+                Update()
+            } else {
+                this.pressed = true
+                Mouse.p = false;
+                this.frame = 2
+                this.rerender()
+                Update()
+            }
+        },
+        traits: [
+            "Image",
+            "Hoverable",
+            "Clickable"
+        ]
+    })
+
+    // Palette
+    PAL_LB = new Element ({
+        name: "Left Palette Button",
+        desc: "Moves the Palettes left",
+
+        x: 0x1d0,
+        y: 0x1e0,
+        w: 0x010,
+        h: 0x010,
+
+        sx: 0x00,
+        sy: 0x00,
+
+        src: "graphics/ui/sheet.png",
+
+        hover: function () {
+            if (this.pressed) { return }
+            this.frame = 1;
+            this.rerender()
+        },
+        abandon: function () {
+            if (this.pressed) { return }
+            this.frame = 0;
+            this.rerender()
+        },
+        click: function () {
+            if (this.pressed) {
+                this.pressed = false
+                this.frame = 0
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            } else {
+                this.pressed = true
+                this.frame = 2
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            }
+        },
+        traits: [
+            "Image",
+            "Hoverable",
+            "Clickable"
+        ]
+    })
+    PAL_RB = new Element ({
+        name: "Right Palette Button",
+        desc: "Moves the Palettes right",
+
+        x: 0x2a0,
+        y: 0x1e0,
+        w: 0x010,
+        h: 0x010,
+
+        sx: 0x00,
+        sy: 0x10,
+
+        src: "graphics/ui/sheet.png",
+
+        hover: function () {
+            if (this.pressed) { return }
+            this.frame = 1;
+            this.rerender()
+        },
+        abandon: function () {
+            if (this.pressed) { return }
+            this.frame = 0;
+            this.rerender()
+        },
+        click: function () {
+            if (this.pressed) {
+                this.pressed = false
+                this.frame = 0
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            } else {
+                this.pressed = true
+                this.frame = 2
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            }
+        },
+        traits: [
+            "Image",
+            "Hoverable",
+            "Clickable"
+        ]
+    })
+
+    // System
+    AUD_BT = new Element ({
+        name: "Mute Audio Button",
+        desc: "Toggles on and off the Audio",
+
+        x: 0x2d0,
+        y: 0x1e9,
+        w: 0x010,
+        h: 0x010,
+
+        sx: 0x00,
+        sy: 0x30,
+
+        src: "graphics/ui/sheet.png",
+
+        hover: function () {
+            if (this.pressed) { return }
+            this.frame = 1;
+            this.rerender()
+        },
+        abandon: function () {
+            if (this.pressed) { return }
+            this.frame = 0;
+            this.rerender()
+        },
+        click: function () {
+            if (this.pressed) {
+                this.pressed = false
+                this.frame = 0
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            } else {
+                this.pressed = true
+                this.frame = 2
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            }
+        },
+        traits: [
+            "Image",
+            "Hoverable",
+            "Clickable"
+        ]
+    })
+    MUS_BT = new Element ({
+        name: "Mute Audio Button",
+        desc: "Toggles on and off the Audio",
+
+        x: 0x2E8,
+        y: 0x1e9,
+        w: 0x010,
+        h: 0x010,
+
+        sx: 0x00,
+        sy: 0x20,
+
+        src: "graphics/ui/sheet.png",
+
+        hover: function () {
+            if (this.pressed) { return }
+            this.frame = 1;
+            this.rerender()
+        },
+        abandon: function () {
+            if (this.pressed) { return }
+            this.frame = 0;
+            this.rerender()
+        },
+        click: function () {
+            if (this.pressed) {
+                this.pressed = false
+                this.frame = 0
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            } else {
+                this.pressed = true
+                this.frame = 2
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            }
+        },
+        traits: [
+            "Image",
+            "Hoverable",
+            "Clickable"
+        ]
+    })
+    SAV_BT = new Element ({
+        name: "Small Button",
+        desc: "A small button",
+
+        x: 0x18C,
+        y: 0x1D8,
+        w: 0x020,
+        h: 0x020,
+
+        sx: 0x30,
+        sy: 0x00,
+
+        src: "graphics/ui/sheet.png",
+
+        hover: function () {
+            if (this.pressed) { return }
+            this.frame = 1;
+            this.rerender()
+        },
+        abandon: function () {
+            if (this.pressed) { return }
+            this.frame = 0;
+            this.rerender()
+        },
+        click: function () {
+            if (this.pressed) {
+                this.pressed = false
+                this.frame = 0
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            } else {
+                this.pressed = true
+                this.frame = 2
+                this.rerender()
+                Mouse.p = false;
+                Update()
+            }
+        },
+        traits: [
+            "Image",
+            "Hoverable",
+            "Clickable"
+        ]
+    })
 }
 
+// Character Creation 
+// All Palettes
+const PAL = {
+    SKIN: [
+        [
+            [0xff, 0xff, 0xf8, 253],
+            [0xf2, 0xda, 0xba, 215],
+            [0xd5, 0xb0, 0x81, 173],
+            [0x99, 0x77, 0x61, 123],
+            [0x75, 0x53, 0x3f,  88]
+        ]
+    ],
+    HAIR: [],
+    EYES: [],
+    BASE: [],
+}
+
+const Layer = function (name) {
+    return new Element ({
+        name: name,
+        desc: name + " layer",
+
+        x: 0,
+        y: 0,
+        w: 0x180,
+        h: 0x200,
+
+        src:"/graphics/chara/" + name + ".png",
+
+        traits: [
+            "Image",
+            "Layer",
+            "Recolorable"
+        ]
+    })
+}
+
+const chg_col = function (palette, tag) {
+    for (e in Elements) {
+        let entity = Elements[e]
+        if (entity.name.slice(-2) == tag) {
+            entity.recolor(palette)
+        }
+    }
+    Update()
+}
+const chg_sel = function (sel, tag) {
+    sel %= 2
+    for (e in Elements) {
+        let entity = Elements[e]
+        if (entity.name.slice(0,2) == tag) {
+            entity.frame = sel
+            entity.rerender()
+        }
+    }
+    Update()
+}
 Elements.push(
-    new Element (TEMPLATES.UI_FRAME),
-    new Element (TEMPLATES.BIG_BUTTON),
-    new Element (TEMPLATES.LONG_BUTTON),
-    new Element (TEMPLATES.SMALL_BUTTON)
+    // UI First
+    UI_FRAME,
+    CAT_LB,
+    CAT_RB,
+    LAY_LB,
+    LAY_RB,
+    PAL_RB,
+    PAL_LB,
+    AUD_BT,
+    MUS_BT,
+    SAV_BT,
+    // Character Second
+    new Layer("ja_b_jc"),
+    new Layer("ja_b_st"),
+    new Layer('ht_b_hc'),
+    new Layer('ht_b_st'),
+    new Layer('ha_b_ha'),
+    new Layer('ha_b_st'),
+    new Layer('sh_b_sc'),
+    new Layer('sh_b_st'),
+    new Layer('ea_sk'),
+    new Layer('ea_st'),
+    new Layer('bo_sk'),
+    new Layer('bo_st'),
+    new Layer('fr_sk'),
+    new Layer('mo_sk'),
+    new Layer('mo_st'),
+    new Layer('no_sk'),
+    new Layer('no_st'),
+    new Layer('eb_sk'),
+    new Layer('eb_ha'),
+    new Layer('eb_st'),
+    new Layer('ey_sk'),
+    new Layer('ey_st'),
+    new Layer('ey_ir'),
+    new Layer('ha_f_ha'),
+    new Layer('ha_f_st'),
+    new Layer('ac_ac'),
+    new Layer('ac_st'),
+    new Layer('sh_f_sc'),
+    new Layer('sh_f_st'),
+    new Layer('fr_ha'),
+    new Layer('fr_st'),
+    new Layer('ht_f_hc'),
+    new Layer('ht_f_st'),
+    new Layer('ja_f_jc'),
+    new Layer('ja_f_st')
 )
