@@ -913,7 +913,6 @@ const Option_Selector = function () {
         traits: ["Clickable"]
     })
     cs.load = function (tag) {
-        console.log(tag)
         this.tag    = tag
         this.slides = make_composite(tag)
     }
@@ -942,7 +941,6 @@ const Option_Selector = function () {
         }
     }
     cs.click = function () {
-        console.log("Hello!")
         let x = Mouse.x - this.x
         let y = Mouse.y - this.y
         if (x > 0xe0) {
@@ -1026,8 +1024,8 @@ const Category_Selector = function () {
     cs.click = function () {
         let x = Math.floor((Mouse.x - this.x) / 0x20)
         this.active_cat = this.list[(this.frame + x) % CONFIG.CAT]
-        console.log(this.active_cat)
         OPT_SEL.load(this.active_cat)
+        Update()
     }
     cs.draw = function () {
         Context.drawImage(
@@ -1055,8 +1053,114 @@ const Category_Selector = function () {
     }
     return cs
 }
+const Color_Selector = function () {
+    let cs = new Element({
+        name: "Color Selector",
+        desc: "Let's you choose which Color you want",
+
+        x: 0x1e8,
+        y: 0x1d0,
+
+        w: 0x0b0,
+        h: 0x0b0,
+
+        traits: ["Clickable", "Hoverable"]
+    })
+    cs.list = [
+        "sk", // skin color
+        "ir", // iris color
+        "ha", // brow color
+        "sk", // skin color
+        "sk", // skin color
+        "mc", // mouth color
+        "ha", // hair color
+        "ha", // hair color
+        "ac", // acc. color
+        "hc", // hat color
+        "sc", // shirt color
+        "jc"  // jacket color
+    ]
+    cs.palettes = {
+        sk: [
+            [
+                [255,255,255,255],
+                [215,215,215,215],
+                [185,185,185,185],
+                [145,145,145,145],
+                [105,105,105,105]
+            ],
+            [
+                [0xff, 0xff, 0xf8, 5],
+                [0xf2, 0xda, 0xba, 4],
+                [0xd5, 0xb0, 0x81, 3],
+                [0x99, 0x77, 0x61, 2],
+                [0x75, 0x53, 0x3f, 1]
+            ]
+        ],
+        ir: [
+            [
+                [255,255,255,255],
+                [215,215,215,215],
+                [185,185,185,185],
+                [145,145,145,145],
+                [105,105,105,105]
+            ]
+        ],
+        ha: [
+            [
+                [255,255,255,255],
+                [215,215,215,215],
+                [185,185,185,185],
+                [145,145,145,145]
+            ]
+        ],
+        ac: [
+            [
+                [255,255,255,255],
+                [215,215,215,215],
+                [185,185,185,185],
+                [145,145,145,145]
+            ]
+        ],
+        hc: [
+            [
+                [255,255,255,255],
+                [215,215,215,215],
+                [185,185,185,185],
+                [145,145,145,145]
+            ]
+        ],
+        sc: [
+            [
+                [255,255,255,255],
+                [215,215,215,215],
+                [185,185,185,185],
+                [145,145,145,145]
+            ]
+        ],
+        jc: [
+            [
+                [255,255,255,255],
+                [215,215,215,215],
+                [185,185,185,185],
+                [145,145,145,145]
+            ]
+        ],
+    }
+    cs.click = function () {
+        let tag = this.list[
+            CAT_SEL.list.indexOf(
+                CAT_SEL.active_cat
+            )
+        ]
+        console.log( tag )
+        chg_col(this.palettes[tag][0], tag)
+    }
+    return cs
+}
 const OPT_SEL = new Option_Selector()
 const CAT_SEL = new Category_Selector()
+const COL_SEL = new Color_Selector()
 // Finally add all the elements
 Elements.push(
     // UI First
@@ -1108,7 +1212,8 @@ Elements.push(
     new Layer('ja_f_st'),
 
     OPT_SEL,
-    CAT_SEL
+    CAT_SEL,
+    COL_SEL
 )
 const on_load = function () {
     if (Loading == 0) {
