@@ -111,6 +111,20 @@ Canvas.addEventListener("mousedown", function (evn) {
     if (evn.button != 0) { return }
     Mouse.p = true
     Update()
+    Mouse.p = false
+})
+window.addEventListener("mouseup", function (evn){
+    Mouse.p = false
+    for (e in Elements) {
+        let element = Elements[e];
+        if (element.pressed) {
+            element.pressed = false
+            element.frame   = 0;
+            element.rerender()
+            Update()
+            return
+        }
+    }
 })
 // Event Loop
 const Update = function () {
@@ -510,7 +524,7 @@ let SAV_BT;
                 Mouse.p = false;
                 this.frame = 2
                 this.rerender()
-                CHO_SEL.frame -= 1
+                OPT_SEL.frame -= 1
                 Update()
             }
         },
@@ -546,19 +560,14 @@ let SAV_BT;
         },
         click: function () {
             if (this.pressed) {
-                Mouse.p = false;
-                this.pressed = false
-                this.frame = 0
-                this.rerender()
-                Update()
-            } else {
-                this.pressed = true
-                Mouse.p = false;
-                this.frame = 2
-                this.rerender()
-                CHO_SEL.frame += 1
-                Update()
+                return
             }
+            this.pressed = true
+            Mouse.p = false;
+            this.frame = 2
+            this.rerender()
+            OPT_SEL.frame += 1
+            Update()            
         },
         traits: [
             "Image",
@@ -885,7 +894,7 @@ const draw_ui = function (sx, sy, sw, sh, x, y) {
     )
 }
 // Choice selector
-const Choice_Selector = function () {
+const Option_Selector = function () {
     let cs = new Element({
         name: "Choice Selector",
         desc: "Let's you choose which option you want",
@@ -972,7 +981,9 @@ const Choice_Selector = function () {
     }
     return cs
 }
-const CHO_SEL = new Choice_Selector()
+const Category_Selector = function () {}
+const OPT_SEL = new Option_Selector()
+const CAT_SEL = new Category_Selector()
 // Finally add all the elements
 Elements.push(
     // UI First
@@ -1023,5 +1034,5 @@ Elements.push(
     new Layer('ja_f_jc'),
     new Layer('ja_f_st'),
 
-    CHO_SEL
+    OPT_SEL
 )
