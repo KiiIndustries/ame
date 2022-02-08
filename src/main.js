@@ -2,7 +2,7 @@
 const CONFIG = {
     HEIGHT: 0x200,
     WIDTH:  0x300,
-    FPS:       60,
+    FPS:       15,
 }
 // Loading details
 let Loading = 0
@@ -832,9 +832,9 @@ const Layer = function (name) {
 
 const chg_col = function (palette, tag) {
     for (e in Elements) {
-        let entity = Elements[e]
-        if (entity.name.slice(-2) == tag) {
-            entity.recolor(palette)
+        let element = Elements[e]
+        if (element.name.slice(-2) == tag) {
+            element.recolor(palette)
         }
     }
     Update()
@@ -842,13 +842,32 @@ const chg_col = function (palette, tag) {
 const chg_sel = function (sel, tag) {
     sel %= 2
     for (e in Elements) {
-        let entity = Elements[e]
-        if (entity.name.slice(0,2) == tag) {
-            entity.frame = sel
-            entity.rerender()
+        let element = Elements[e]
+        if (element.name.slice(0,2) == tag) {
+            element.frame = sel
+            element.rerender()
         }
     }
     Update()
+}
+const make_composite = function (tag) {
+    let slides = []
+    for (e in Elements) {
+        let element = Elements[e]
+        if (element.name.slice(0,2) != tag) {
+            continue
+        }
+        slides.push(element.image)
+    }
+    return slides
+}
+const draw_composite = function (slides, frame, x, y) {
+    for (const s in slides) {
+        Context.drawImage(slides[s],
+            0x180 * frame, 0,
+            0x180, 0x200,
+            x, y, 0x60, 0x80)
+    }
 }
 Elements.push(
     // UI First
