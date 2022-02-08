@@ -4,7 +4,7 @@ const CONFIG = {
     WIDTH:  0x300,
     FPS:    0x010,
     CAT:    0x00c, // How many categories
-    OPT:    0x004, // How many options per category
+    OPT:    0x009, // How many options per category
 }
 // Loading details
 let Loading = 0
@@ -432,6 +432,7 @@ let SAV_BT;
                 this.frame = 2
                 this.rerender()
                 Mouse.p = false;
+                CAT_SEL.frame--
                 Update()
             }
         },
@@ -477,6 +478,7 @@ let SAV_BT;
                 this.frame = 2
                 this.rerender()
                 Mouse.p = false;
+                CAT_SEL.frame++
                 Update()
             }
         },
@@ -899,7 +901,7 @@ const draw_ui = function (sx, sy, sw, sh, x, y) {
 // Choice selector
 const Option_Selector = function () {
     let cs = new Element({
-        name: "Choice Selector",
+        name: "Option Selector",
         desc: "Let's you choose which option you want",
 
         x: 0x1a0,
@@ -911,6 +913,7 @@ const Option_Selector = function () {
         traits: ["Clickable"]
     })
     cs.load = function (tag) {
+        console.log(tag)
         this.tag    = tag
         this.slides = make_composite(tag)
     }
@@ -983,7 +986,75 @@ const Option_Selector = function () {
     }
     return cs
 }
-const Category_Selector = function () {}
+const Category_Selector = function () {
+    let cs = new Element({
+        name: "Category Selector",
+        desc: "Let's you choose which Category you want",
+
+        x: 0x1b0,
+        y: 0x000,
+
+        w: 0x120,
+        h: 0x020,
+
+        traits: ["Clickable", "Hoverable"]
+    })
+    cs.Hoverable_update = function () {
+        if (Utils.checkInside(Mouse, this)){
+            this.mousePos  = Math.floor((Mouse.x - this.x) / 0x20)
+            return
+        }
+        this.mousePos = "false"
+    }
+    cs.hover = function () {}
+    cs.active_cat = "ja"
+    cs.frame = 0x1000 * CONFIG.CAT
+    cs.list  = [
+        "bo",
+        "ey",
+        "eb",
+        "ea",
+        "no",
+        "mo",
+        "fr",
+        "ha",
+        "ac",
+        "ht",
+        "sh",
+        "ja"
+    ]
+    cs.click = function () {
+        let x = Math.floor((Mouse.x - this.x) / 0x20)
+        this.active_cat = this.list[(this.frame + x) % CONFIG.CAT]
+        console.log(this.active_cat)
+        OPT_SEL.load(this.active_cat)
+    }
+    cs.draw = function () {
+        Context.drawImage(
+            UI_FRAME.image,
+            0x00, 0x1e0,
+            this.w, this.h,
+            this.x, this.y,
+            this.w, this.h
+        )
+        for (let x = 0; x < 9; x++) {
+            let s = Math.abs((this.frame + x) % CONFIG.CAT)
+            let p = 0
+            if (x == this.mousePos) { p = 0x20}
+            if (this.list[s] == this.active_cat) {
+                p = 0x40
+            }
+            Context.drawImage(
+                UI_FRAME.image,
+                0x30 + p, 
+                0x20 + 0x20 * s,
+                0x20, 0x20,
+                this.x + 0x20 * x, this.y,
+                0x20, 0x20)
+        }
+    }
+    return cs
+}
 const OPT_SEL = new Option_Selector()
 const CAT_SEL = new Category_Selector()
 // Finally add all the elements
@@ -1036,7 +1107,8 @@ Elements.push(
     new Layer('ja_f_jc'),
     new Layer('ja_f_st'),
 
-    OPT_SEL
+    OPT_SEL,
+    CAT_SEL
 )
 const on_load = function () {
     if (Loading == 0) {
@@ -1044,6 +1116,6 @@ const on_load = function () {
         Update()
         return
     }
-    setInterval(on_load, 1000/CONFIG.FPS)
+    setTimeout(on_load, 1000/CONFIG.FPS)
 }
 on_load()
