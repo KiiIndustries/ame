@@ -429,6 +429,7 @@ let SAV_BT;
                 Update()
             } else {
                 this.pressed = true
+                AUDIO.play('click')
                 this.frame = 2
                 this.rerender()
                 Mouse.p = false;
@@ -474,6 +475,7 @@ let SAV_BT;
                 Mouse.p = false;
                 Update()
             } else {
+                AUDIO.play('click')
                 this.pressed = true
                 this.frame = 2
                 this.rerender()
@@ -522,6 +524,7 @@ let SAV_BT;
                 this.rerender()
                 Update()
             } else {
+                AUDIO.play('click')
                 this.pressed = true
                 Mouse.p = false;
                 this.frame = 2
@@ -564,6 +567,7 @@ let SAV_BT;
             if (this.pressed) {
                 return
             }
+            AUDIO.play('click')
             this.pressed = true
             Mouse.p = false;
             this.frame = 2
@@ -611,6 +615,7 @@ let SAV_BT;
                 Mouse.p = false;
                 Update()
             } else {
+                AUDIO.play('click')
                 this.pressed = true
                 this.frame = 2
                 this.rerender()
@@ -656,6 +661,7 @@ let SAV_BT;
                 Mouse.p = false;
                 Update()
             } else {
+                AUDIO.play('click')
                 this.pressed = true
                 this.frame = 2
                 this.rerender()
@@ -916,7 +922,7 @@ const Option_Selector = function () {
         this.tag    = tag
         this.slides = make_composite(tag)
     }
-    cs.frame = 0
+    cs.frame = 0x1000 * CONFIG.OPT
     cs.draw = function () {
         for (let y = 0; y < 2; y++) {
             for (let x = 0; x < 3; x++) {
@@ -999,7 +1005,17 @@ const Category_Selector = function () {
     })
     cs.Hoverable_update = function () {
         if (Utils.checkInside(Mouse, this)){
+            let last_pos = this.mousePos
             this.mousePos  = Math.floor((Mouse.x - this.x) / 0x20)
+            if (last_pos != this.mousePos) {
+                if (
+                    this.list[
+                        (this.mousePos + this.frame) % CONFIG.CAT
+                    ] == this.active_cat ) {
+                        return
+                    }
+                AUDIO.play('hover')
+            }
             return
         }
         this.mousePos = "false"
@@ -1023,7 +1039,11 @@ const Category_Selector = function () {
     ]
     cs.click = function () {
         let x = Math.floor((Mouse.x - this.x) / 0x20)
+        let old_cat = this.active_cat
         this.active_cat = this.list[(this.frame + x) % CONFIG.CAT]
+        if (old_cat != this.active_cat) {
+            AUDIO.play('cat_click')
+        }
         OPT_SEL.load(this.active_cat)
         Update()
     }
@@ -1161,6 +1181,19 @@ const Color_Selector = function () {
 const OPT_SEL = new Option_Selector()
 const CAT_SEL = new Category_Selector()
 const COL_SEL = new Color_Selector()
+
+const Audio_Player = function () {
+    let a = {}
+    a.SFX   = true;
+    a.BGM   = true;
+    a.play = function (sfx) {
+        if (!this.SFX) { return }
+        let c = new Audio('/audio/'+sfx+'.wav')
+        c.play()
+    }
+    return a
+}
+const AUDIO  = new Audio_Player()
 // Finally add all the elements
 Elements.push(
     // UI First
