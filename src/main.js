@@ -2,7 +2,9 @@
 const CONFIG = {
     HEIGHT: 0x200,
     WIDTH:  0x300,
-    FPS:       15,
+    FPS:    0x010,
+    CAT:    0x00c, // How many categories
+    OPT:    0x004, // How many options per category
 }
 // Loading details
 let Loading = 0
@@ -109,7 +111,6 @@ Canvas.addEventListener("mousedown", function (evn) {
     if (evn.button != 0) { return }
     Mouse.p = true
     Update()
-    Mouse.p = false
 })
 // Event Loop
 const Update = function () {
@@ -189,9 +190,9 @@ const Traits = {
             if (!Utils.checkInside(Mouse, this)) {
                 return
             }
+            Mouse.p = false
             this.click()
             // Give this object click priority
-            // Mouse.p = false
         },
         click: function () {
             console.log(`${this.name} was clicked!`)
@@ -358,6 +359,7 @@ let PAL_LB;
 let AUD_BT;
 let MUS_BT;
 let SAV_BT;
+
 // I just wanna hide this for now
 {
     // Frame
@@ -508,6 +510,7 @@ let SAV_BT;
                 Mouse.p = false;
                 this.frame = 2
                 this.rerender()
+                CHO_SEL.frame -= 1
                 Update()
             }
         },
@@ -553,6 +556,7 @@ let SAV_BT;
                 Mouse.p = false;
                 this.frame = 2
                 this.rerender()
+                CHO_SEL.frame += 1
                 Update()
             }
         },
@@ -792,9 +796,7 @@ let SAV_BT;
         ]
     })
 }
-
 // Character Creation 
-// All Palettes
 const PAL = {
     SKIN: [
         [
@@ -809,7 +811,6 @@ const PAL = {
     EYES: [],
     BASE: [],
 }
-
 const Layer = function (name) {
     return new Element ({
         name: name,
@@ -829,7 +830,6 @@ const Layer = function (name) {
         ]
     })
 }
-
 const chg_col = function (palette, tag) {
     for (e in Elements) {
         let element = Elements[e]
@@ -840,7 +840,7 @@ const chg_col = function (palette, tag) {
     Update()
 }
 const chg_sel = function (sel, tag) {
-    sel %= 2
+    sel %= CONFIG.OPT
     for (e in Elements) {
         let element = Elements[e]
         if (element.name.slice(0,2) == tag) {
@@ -849,6 +849,14 @@ const chg_sel = function (sel, tag) {
         }
     }
     Update()
+}
+const cur_sel = function (tag) {
+    for (e in Elements) {
+        let element = Elements[e]
+        if (element.name.slice(0,2) == tag) {
+            return element.frame
+        }
+    } 
 }
 const make_composite = function (tag) {
     let slides = []
@@ -869,6 +877,103 @@ const draw_composite = function (slides, frame, x, y) {
             x, y, 0x60, 0x80)
     }
 }
+const draw_ui = function (sx, sy, sw, sh, x, y) {
+    Context.drawImage(
+        UI_FRAME.image, 
+        sx, sy, sw, sh, 
+         x,  y, sw, sh
+    )
+}
+// Choice selector
+const Choice_Selector = function () {
+    let cs = new Element({
+        name: "Choice Selector",
+        desc: "Let's you choose which option you want",
+
+        x: 0x1a0,
+        y: 0x028,
+
+        w: 0x140,
+        h: 0x110,
+
+        traits: ["Clickable"]
+    })
+    cs.load = function (tag) {
+        this.tag    = tag
+        this.slides = make_composite(tag)
+    }
+    cs.frame = 0
+    cs.load("ja")
+    cs.draw = function () {
+        for (let y = 0; y < 2; y++) {
+            for (let x = 0; x < 3; x++) {
+                let t = 1;
+                let s = Math.abs((this.frame+x+3*y)%CONFIG.OPT)
+                if (cur_sel(this.tag) == s) {
+                    t = 0;
+                }
+                draw_ui(
+                    0x90 + 0x60 * t, 0,
+                    0x60, 0x80,
+                    this.x + x * 0x70,
+                    this.y + y * 0x90
+                )
+                draw_composite(
+                    this.slides, 
+                    s,
+                    this.x + x * 0x70,
+                    this.y + y * 0x90 - 2 * t
+                )
+            }
+        }
+    }
+    cs.click = function () {
+        console.log("Hello!")
+        let x = Mouse.x - this.x
+        let y = Mouse.y - this.y
+        if (x > 0xe0) {
+            if (y > 0x90) {
+                chg_sel(Math.abs(this.frame + 5), this.tag)
+                return
+            }
+            if (y > 0x80) {
+                return
+            }
+            chg_sel(Math.abs(this.frame + 2), this.tag)
+            return
+        }
+        if (x > 0xd0) {
+            return
+        }
+        if (x > 0x70) {
+            if (y > 0x90) {
+                chg_sel(Math.abs(this.frame + 4), this.tag)
+                return
+            }
+            if (y > 0x80) {
+                return
+            }
+            chg_sel(Math.abs(this.frame + 1), this.tag)
+            return
+        }
+        if (x > 0x60) {
+            return
+        }
+
+        if (y > 0x90) {
+            chg_sel(Math.abs(this.frame + 3), this.tag)
+            return
+        }
+        if (y > 0x80) {
+            return
+        }
+        chg_sel(Math.abs(this.frame + 0), this.tag)
+        return
+    }
+    return cs
+}
+const CHO_SEL = new Choice_Selector()
+// Finally add all the elements
 Elements.push(
     // UI First
     UI_FRAME,
@@ -916,5 +1021,7 @@ Elements.push(
     new Layer('ht_f_hc'),
     new Layer('ht_f_st'),
     new Layer('ja_f_jc'),
-    new Layer('ja_f_st')
+    new Layer('ja_f_st'),
+
+    CHO_SEL
 )
