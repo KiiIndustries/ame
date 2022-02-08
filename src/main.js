@@ -117,7 +117,7 @@ window.addEventListener("mouseup", function (evn){
     Mouse.p = false
     for (e in Elements) {
         let element = Elements[e];
-        if (element.pressed) {
+        if (element.pressed && !element.toggle) {
             element.pressed = false
             element.frame   = 0;
             element.rerender()
@@ -714,6 +714,7 @@ let SAV_BT;
             "Clickable"
         ]
     })
+    AUD_BT.toggle = true
     MUS_BT = new Element ({
         name: "Mute Audio Button",
         desc: "Toggles on and off the Audio",
@@ -759,6 +760,7 @@ let SAV_BT;
             "Clickable"
         ]
     })
+    MUS_BT.toggle = true
     SAV_BT = new Element ({
         name: "Small Button",
         desc: "A small button",
@@ -804,6 +806,7 @@ let SAV_BT;
             "Clickable"
         ]
     })
+    SAV_BT.toggle = true
 }
 // Character Creation 
 const PAL = {
@@ -912,7 +915,6 @@ const Option_Selector = function () {
         this.slides = make_composite(tag)
     }
     cs.frame = 0
-    cs.load("ja")
     cs.draw = function () {
         for (let y = 0; y < 2; y++) {
             for (let x = 0; x < 3; x++) {
@@ -1036,3 +1038,12 @@ Elements.push(
 
     OPT_SEL
 )
+const on_load = function () {
+    if (Loading == 0) {
+        OPT_SEL.load("ja")
+        Update()
+        return
+    }
+    setInterval(on_load, 1000/CONFIG.FPS)
+}
+on_load()
