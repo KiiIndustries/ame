@@ -74,19 +74,23 @@ const Utils = {
             canvas.width, canvas.height
         )
         let data = imgData.data
+        loop:
         for (let p = 0; p < data.length; p += 4) {
-            if (data[p + 3] !== 255) { continue }
-            if (
-                data[p + 0] == tarCol[0] &&
-                data[p + 1] == tarCol[1] &&
-                data[p + 2] == tarCol[2]
-            ) {
-                imgData.data[p + 0] = repCol[0]
-                imgData.data[p + 1] = repCol[1]
-                imgData.data[p + 2] = repCol[2]
+            //if (data[p + 3] !== 255) { continue }
+            for (let c = 0; c < tarCol.length; c++) {
+              if (
+                  data[p + 0] == tarCol[c][0] &&
+                  data[p + 1] == tarCol[c][1] &&
+                  data[p + 2] == tarCol[c][2]
+              ) {
+                  imgData.data[p + 0] = repCol[c][0]
+                  imgData.data[p + 1] = repCol[c][1]
+                  imgData.data[p + 2] = repCol[c][2]
+                  continue loop
+              }
             }
         }
-        this.context.putImageData(imageData, 0, 0)
+        context.putImageData(imgData, 0, 0)
     }
 }
 // Canvas creation
@@ -311,7 +315,7 @@ const Traits = {
                 if (newPal.length != this.palette.length) {
                     console.log(`${newPal.length} != ${this.palette.length}`)
                     console.log(this)
-                    console.log("Invalid Palette size!")
+                    console.error("Invalid Palette size!")
                     return
                 }
                 let context = this.image.getContext("2d")
@@ -622,6 +626,7 @@ let SAV_BT;
                 this.frame = 2
                 this.rerender()
                 Mouse.p = false;
+                COL_SEL.ind_list[COL_SEL.index]--
                 Update()
             }
         },
@@ -668,6 +673,7 @@ let SAV_BT;
                 this.frame = 2
                 this.rerender()
                 Mouse.p = false;
+                COL_SEL.ind_list[COL_SEL.index]++
                 Update()
             }
         },
@@ -706,12 +712,14 @@ let SAV_BT;
         click: function () {
             if (this.pressed) {
                 this.pressed = false
+                AUDIO.SFX = true
                 this.frame = 0
                 this.rerender()
                 Mouse.p = false;
                 Update()
             } else {
                 this.pressed = true
+                AUDIO.SFX = false
                 this.frame = 2
                 this.rerender()
                 Mouse.p = false;
@@ -737,6 +745,8 @@ let SAV_BT;
         sx: 0x00,
         sy: 0x20,
 
+        c: new Audio('/audio/sugar_cookie.mp3'),
+
         src: "graphics/ui/sheet.png",
 
         hover: function () {
@@ -755,12 +765,15 @@ let SAV_BT;
                 this.frame = 0
                 this.rerender()
                 Mouse.p = false;
+                this.c.loop = true
+                this.c.play()
                 Update()
             } else {
                 this.pressed = true
                 this.frame = 2
                 this.rerender()
                 Mouse.p = false;
+                this.c.pause()
                 Update()
             }
         },
@@ -805,7 +818,7 @@ let SAV_BT;
             } else {
                 {
                   let link = document.createElement("a");
-                  link.download = 'avatar.png'
+                  link.download = 'character.png'
                   let canvas = document.createElement("canvas");
                   canvas.width  = Canvas.width / 2
                   canvas.height = Canvas.height
@@ -835,21 +848,6 @@ let SAV_BT;
             "Clickable"
         ]
     })
-}
-// Character Creation 
-const PAL = {
-    SKIN: [
-        [
-            [0xff, 0xff, 0xf8, 253],
-            [0xf2, 0xda, 0xba, 215],
-            [0xd5, 0xb0, 0x81, 173],
-            [0x99, 0x77, 0x61, 123],
-            [0x75, 0x53, 0x3f,  88]
-        ]
-    ],
-    HAIR: [],
-    EYES: [],
-    BASE: [],
 }
 const Layer = function (name) {
     return new Element ({
@@ -1047,12 +1045,15 @@ const Category_Selector = function () {
         "bo",
         "ey",
         "eb",
+
         "ea",
         "no",
         "mo",
+
         "fr",
         "ha",
         "ac",
+
         "ht",
         "sh",
         "ja"
@@ -1060,12 +1061,14 @@ const Category_Selector = function () {
     cs.click = function () {
         let x = Math.floor((Mouse.x - this.x) / 0x20)
         let old_cat = this.active_cat
-        this.active_cat = this.list[(this.frame + x) % CONFIG.CAT]
+        let num = (this.frame + x) % CONFIG.CAT
+        this.active_cat = this.list[num]
         if (old_cat != this.active_cat) {
-            AUDIO.play('cat_click')
+          AUDIO.play('cat_click')
+          OPT_SEL.load(this.active_cat)
+          COL_SEL.load(num)
+          Update()
         }
-        OPT_SEL.load(this.active_cat)
-        Update()
     }
     cs.draw = function () {
         Context.drawImage(
@@ -1098,30 +1101,72 @@ const Color_Selector = function () {
         name: "Color Selector",
         desc: "Let's you choose which Color you want",
 
-        x: 0x1e8,
+        x: 0x1f0,
         y: 0x1d0,
 
-        w: 0x0b0,
-        h: 0x0b0,
+        w: 0x0a0,
+        h: 0x030,
 
         traits: ["Clickable", "Hoverable"]
     })
+    cs.tag = "jc"
     cs.list = [
         "sk", // skin color
         "ir", // iris color
         "ha", // brow color
+
         "sk", // skin color
         "sk", // skin color
-        "mc", // mouth color
+        "sk", // mouth color
+
         "ha", // hair color
         "ha", // hair color
         "ac", // acc. color
+
         "hc", // hat color
         "sc", // shirt color
         "jc"  // jacket color
     ]
+    cs.index = 8;
+    cs.ind_list = [
+      0x1000,
+      0x1000,
+      0x1000,
+
+      0x1000,
+      0x1000,
+      0x1000,
+
+      0x1000,
+      0x1000,
+      0x1000,
+
+      0x1000,
+      0x1000,
+      0x1000
+    ]
+    cs.col_list = [
+      0, 0, 0,
+      0, 0, 0,
+      0, 0, 0,
+      0, 0, 0
+    ]
     cs.palettes = {
         sk: [
+            [
+                [0xff, 0xff, 0xf8, 5],
+                [0xf2, 0xda, 0xba, 4],
+                [0xd5, 0xb0, 0x81, 3],
+                [0x99, 0x77, 0x61, 2],
+                [0x75, 0x53, 0x3f, 1]
+            ],
+            [
+              [0xf2, 0xda, 0xbb, 5],
+              [0xd5, 0xb0, 0x80, 4],
+              [0x99, 0x77, 0x60, 3],
+              [0x75, 0x53, 0x3e, 2],
+              [0x4e, 0x39, 0x2c, 1]
+            ],
             [
                 [255,255,255,255],
                 [215,215,215,215],
@@ -1129,71 +1174,198 @@ const Color_Selector = function () {
                 [145,145,145,145],
                 [105,105,105,105]
             ],
+        ],
+        ir: [
+          [
+            [0xd5, 0xb0, 0x80, 4],
+            [0x99, 0x77, 0x60, 3],
+            [0x75, 0x53, 0x3e, 2],
+            [0x4e, 0x39, 0x2c, 1]
+          ],
+            [
+                [255,255,255,255],
+                [215,215,215,215],
+                [185,185,185,185],
+                [145,145,145,145]
+            ],
             [
                 [0xff, 0xff, 0xf8, 5],
                 [0xf2, 0xda, 0xba, 4],
                 [0xd5, 0xb0, 0x81, 3],
-                [0x99, 0x77, 0x61, 2],
-                [0x75, 0x53, 0x3f, 1]
-            ]
-        ],
-        ir: [
+                [0x99, 0x77, 0x61, 2]
+            ],
             [
-                [255,255,255,255],
-                [215,215,215,215],
-                [185,185,185,185],
-                [145,145,145,145]
-            ]
+              [0xac, 0xac, 0xa3, 4],
+              [0x7f, 0x89, 0x83, 3],
+              [0x5f, 0x69, 0x76, 2],
+              [0x3b, 0x46, 0x5c, 1]
+            ],
         ],
         ha: [
+          [
+            [0xab, 0xac, 0xa3, 4],
+            [0x7e, 0x89, 0x83, 3],
+            [0x5e, 0x69, 0x76, 2],
+            [0x3a, 0x46, 0x5c, 1]
+          ],
+          [
+            [0xd5, 0xb0, 0x80, 4],
+            [0x99, 0x77, 0x60, 3],
+            [0x75, 0x53, 0x3e, 2],
+            [0x4e, 0x39, 0x2c, 1]
+          ],
+          [
+            [0x7e, 0x88, 0x84, 4],
+            [0x5e, 0x68, 0x77, 3],
+            [0x3a, 0x46, 0x5d, 2],
+            [0x1f, 0x2c, 0x3f, 1]
+          ],
             [
                 [255,255,255,255],
                 [215,215,215,215],
                 [185,185,185,185],
                 [145,145,145,145]
+            ],
+            [
+                [0xff, 0xff, 0xf8, 5],
+                [0xf2, 0xda, 0xba, 4],
+                [0xd5, 0xb0, 0x81, 3],
+                [0x99, 0x77, 0x61, 2]
             ]
         ],
         ac: [
+          [
+            [0xf5, 0xb0, 0xf3, 4],
+            [0xd2, 0x71, 0x96, 3],
+            [0xb8, 0x58, 0x66, 2],
+            [0x75, 0x53, 0x3f, 1]
+          ],
             [
                 [255,255,255,255],
                 [215,215,215,215],
                 [185,185,185,185],
                 [145,145,145,145]
+            ],
+            [
+                [0xff, 0xff, 0xf8, 5],
+                [0xf2, 0xda, 0xba, 4],
+                [0xd5, 0xb0, 0x81, 3],
+                [0x99, 0x77, 0x61, 2]
             ]
         ],
         hc: [
+          [
+            [0xf5, 0xb0, 0xf3, 4],
+            [0xd2, 0x71, 0x96, 3],
+            [0xb8, 0x58, 0x66, 2],
+            [0x75, 0x53, 0x3f, 1]
+          ],
             [
                 [255,255,255,255],
                 [215,215,215,215],
                 [185,185,185,185],
                 [145,145,145,145]
+            ],
+            [
+                [0xff, 0xff, 0xf8, 5],
+                [0xf2, 0xda, 0xba, 4],
+                [0xd5, 0xb0, 0x81, 3],
+                [0x99, 0x77, 0x61, 2]
             ]
         ],
         sc: [
+          [
+            [0xf5, 0xb0, 0xf3, 4],
+            [0xd2, 0x71, 0x96, 3],
+            [0xb8, 0x58, 0x66, 2],
+            [0x75, 0x53, 0x3f, 1]
+          ],
             [
                 [255,255,255,255],
                 [215,215,215,215],
                 [185,185,185,185],
                 [145,145,145,145]
+            ],
+            [
+                [0xff, 0xff, 0xf8, 5],
+                [0xf2, 0xda, 0xba, 4],
+                [0xd5, 0xb0, 0x81, 3],
+                [0x99, 0x77, 0x61, 2]
             ]
         ],
         jc: [
+          [
+            [0xf5, 0xb0, 0xf3, 4],
+            [0xd2, 0x71, 0x96, 3],
+            [0xb8, 0x58, 0x66, 2],
+            [0x75, 0x53, 0x3f, 1]
+          ],
             [
                 [255,255,255,255],
                 [215,215,215,215],
                 [185,185,185,185],
                 [145,145,145,145]
+            ],
+            [
+                [0xff, 0xff, 0xf8, 5],
+                [0xf2, 0xda, 0xba, 4],
+                [0xd5, 0xb0, 0x81, 3],
+                [0x99, 0x77, 0x61, 2]
             ]
         ],
     }
+    
+    cs.load = function (num) {
+      this.tag = this.list[num]
+      this.index = num
+      Update()
+    }
+    cs.draw = function () {
+      let pen_cap = document.createElement("canvas")
+      pen_cap.width  = 0x20
+      pen_cap.height = 0x60
+      let context = pen_cap.getContext("2d")
+      context.drawImage(UI_FRAME.image,
+        0xd0, 0x180, 
+        0x20, 0x60, 
+        0 , 0,
+        0x20, 0x60
+      )
+      for (let x = 0; x < 5; x++) {
+        let s = (this.ind_list[this.index] + x) % this.palettes[this.tag].length
+        let p = 0
+        if (s == this.col_list[this.index]) {
+          p = 0x30
+        }
+        let old_col = Utils.palGen(pen_cap)
+        Utils.subCol(pen_cap, old_col, this.palettes[this.tag][(x + this.ind_list[this.index]) % this.palettes[this.tag].length].slice(0, 4))
+        Context.drawImage(
+          pen_cap,
+          0, 0 + p,
+          0x20, 0x30,
+          this.x + x * 0x20, this.y,
+          0x20, 0x30
+        )        
+        Context.drawImage(
+          UI_FRAME.image,
+          0x90, 0x180 + p,
+          0x20, 0x030,
+          this.x + x * 0x20, this.y,
+          0x20, 0x30
+        )
+      }
+    }
     cs.click = function () {
-        let tag = this.list[
-            CAT_SEL.list.indexOf(
-                CAT_SEL.active_cat
-            )
-        ]
-        console.log( tag )
-        chg_col(this.palettes[tag][0], tag)
+        let old_color = this.col_list[this.index]
+        let click_index = Math.floor((Mouse.x - this.x) / 0x20)
+        let new_color = (this.ind_list[this.index] + click_index) %
+          this.palettes[this.tag].length
+        if (new_color != old_color) {
+          this.col_list[this.index] = new_color
+          chg_col(this.palettes[this.tag][new_color], this.tag)
+          AUDIO.play("pop")
+          Update()
+        }
     }
     return cs
 }
@@ -1204,7 +1376,6 @@ const COL_SEL = new Color_Selector()
 const Audio_Player = function () {
     let a = {}
     a.SFX   = true;
-    a.BGM   = true;
     a.play = function (sfx) {
         if (!this.SFX) { return }
         let c = new Audio('/audio/'+sfx+'.wav')
@@ -1271,6 +1442,7 @@ const on_load = function () {
     if (Loading == 0) {
         OPT_SEL.load("ja")
         Update()
+
         return
     }
     setTimeout(on_load, 1000/CONFIG.FPS)
