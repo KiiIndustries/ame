@@ -309,6 +309,8 @@ const Traits = {
             }
             element.recolor = function (newPal) {
                 if (newPal.length != this.palette.length) {
+                    console.log(`${newPal.length} != ${this.palette.length}`)
+                    console.log(this)
                     console.log("Invalid Palette size!")
                     return
                 }
@@ -801,6 +803,25 @@ let SAV_BT;
                 Mouse.p = false;
                 Update()
             } else {
+                {
+                  let link = document.createElement("a");
+                  link.download = 'avatar.png'
+                  let canvas = document.createElement("canvas");
+                  canvas.width  = Canvas.width / 2
+                  canvas.height = Canvas.height
+                  let context = canvas.getContext("2d");
+                  Update()
+                  context.drawImage(Canvas, 0, 0)
+                  context.drawImage(
+                    UI_FRAME.image,
+                    0x90, 0x90,
+                    0xf0, 0x30,
+                    0xb0, 0x1d0,
+                    0xf0, 0x30
+                  )
+                  link.href = canvas.toDataURL()
+                  link.click()
+                }
                 this.pressed = true
                 this.frame = 2
                 this.rerender()
@@ -814,7 +835,6 @@ let SAV_BT;
             "Clickable"
         ]
     })
-    SAV_BT.toggle = true
 }
 // Character Creation 
 const PAL = {
@@ -1122,8 +1142,7 @@ const Color_Selector = function () {
                 [255,255,255,255],
                 [215,215,215,215],
                 [185,185,185,185],
-                [145,145,145,145],
-                [105,105,105,105]
+                [145,145,145,145]
             ]
         ],
         ha: [
