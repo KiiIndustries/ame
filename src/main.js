@@ -93,6 +93,51 @@ const Utils = {
         context.putImageData(imgData, 0, 0)
     }
 }
+
+let StartScreen = true
+let frame = 0
+let ui = new Image()
+ui.src = 'graphics/ui/sheet.png'
+
+const on_load = function () {
+  Context.clearRect(0, 0, Canvas.width, Canvas.height)
+  Context.fillStyle = "#d5d7ce"
+  Context.fillRect(0, 0, Canvas.width, Canvas.height)
+  Context.drawImage(
+    ui,
+    0x90, 0x90,
+    0xf0, 0x30,
+    0x230, 0x1d0,
+    0xf0, 0x30
+  )
+    if (Loading == 0) {
+
+      if (!StartScreen) {
+        StartScreen = false
+        OPT_SEL.load("bo")
+        Update()
+
+        return
+      }
+      Context.drawImage(
+        ui, 0x180, 0x200 + 0x90 * (frame % 3),
+        0xb0, 0x90, 
+        0x128, 0x78,
+        0xb0, 0x90
+      )
+    } else {
+      Context.drawImage(
+        ui, 0x90, 0xf0 + 0x30 * (frame % 3),
+        0x90, 0x30,
+        0x138, 0x098,
+        0x90, 0x30
+        )
+    }
+    frame++
+    setTimeout(on_load, 1000/CONFIG.FPS)
+}
+ui.onload = on_load
+
 // Canvas creation
 const Canvas  = document.createElement("CANVAS");
 Canvas.width  = CONFIG.WIDTH;
@@ -112,6 +157,14 @@ Canvas.addEventListener("mousemove", function (evn) {
     Update()
 })
 Canvas.addEventListener("mousedown", function (evn) {
+    if (StartScreen) {
+      if (Loading == 0) {
+        StartScreen = false
+        MUS_BT.c.loop = true
+        MUS_BT.c.play()
+      }
+      return 
+    }
     if (evn.button != 0) { return }
     Mouse.p = true
     Update()
@@ -132,6 +185,7 @@ window.addEventListener("mouseup", function (evn){
 })
 // Event Loop
 const Update = function () {
+    if (StartScreen) { return }
     if (Loading != 0) { 
         // Wait 1 frame and try again
         console.log(`Loading! Loading queue: ${Loading}`)
@@ -745,7 +799,7 @@ let SAV_BT;
         sx: 0x00,
         sy: 0x20,
 
-        c: new Audio('/audio/sugar_cookie.mp3'),
+        c: new Audio('/audio/bgm.mp3'),
 
         src: "graphics/ui/sheet.png",
 
@@ -972,12 +1026,14 @@ const Option_Selector = function () {
         if (x > 0xe0) {
             if (y > 0x90) {
                 chg_sel(Math.abs(this.frame + 5), this.tag)
+                AUDIO.play("pop")
                 return
             }
             if (y > 0x80) {
                 return
             }
             chg_sel(Math.abs(this.frame + 2), this.tag)
+            AUDIO.play("pop")
             return
         }
         if (x > 0xd0) {
@@ -986,12 +1042,14 @@ const Option_Selector = function () {
         if (x > 0x70) {
             if (y > 0x90) {
                 chg_sel(Math.abs(this.frame + 4), this.tag)
+                AUDIO.play("pop")
                 return
             }
             if (y > 0x80) {
                 return
             }
             chg_sel(Math.abs(this.frame + 1), this.tag)
+            AUDIO.play("pop")
             return
         }
         if (x > 0x60) {
@@ -1000,12 +1058,14 @@ const Option_Selector = function () {
 
         if (y > 0x90) {
             chg_sel(Math.abs(this.frame + 3), this.tag)
+            AUDIO.play("pop")
             return
         }
         if (y > 0x80) {
             return
         }
         chg_sel(Math.abs(this.frame + 0), this.tag)
+        AUDIO.play("pop")
         return
     }
     return cs
@@ -1041,7 +1101,7 @@ const Category_Selector = function () {
         this.mousePos = "false"
     }
     cs.hover = function () {}
-    cs.active_cat = "ja"
+    cs.active_cat = "bo"
     cs.frame = 0x1000 * CONFIG.CAT
     cs.list  = [
         "bo",
@@ -1066,7 +1126,7 @@ const Category_Selector = function () {
         let num = (this.frame + x) % CONFIG.CAT
         this.active_cat = this.list[num]
         if (old_cat != this.active_cat) {
-          AUDIO.play('cat_click')
+          AUDIO.play('pop')
           OPT_SEL.load(this.active_cat)
           COL_SEL.load(num)
           Update()
@@ -1111,7 +1171,7 @@ const Color_Selector = function () {
 
         traits: ["Clickable", "Hoverable"]
     })
-    cs.tag = "jc"
+    cs.tag = "sk"
     cs.list = [
         "sk", // skin color
         "ir", // iris color
@@ -1386,8 +1446,20 @@ const Audio_Player = function () {
     return a
 }
 const AUDIO  = new Audio_Player()
+const Background = function  () {
+  this.name = "xxxxx"
+  this.image = new Image()
+  this.image.src = 'graphics/ui/sheet.png'
+  this.update = function () {
+    Context.drawImage(this.image,
+      0x0, 0x200, 0x180, 0x200,
+      0x0, 0x0, 0x180, 0x200)
+  }
+}
+const BG = new Background()
 // Finally add all the elements
 Elements.push(
+    BG,
     // UI First
     UI_FRAME,
     CAT_LB,
@@ -1440,13 +1512,3 @@ Elements.push(
     CAT_SEL,
     COL_SEL
 )
-const on_load = function () {
-    if (Loading == 0) {
-        OPT_SEL.load("ja")
-        Update()
-
-        return
-    }
-    setTimeout(on_load, 1000/CONFIG.FPS)
-}
-on_load()
