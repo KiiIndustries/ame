@@ -8,10 +8,11 @@ const Ame = {
  Canvas:   null,
  Context:  null,
  UI_Sheet: null,
+ Chara_Folder: 'graphics/character',
  Mouse: {x: 0, y: 0, p: false},
  Audio: {
-  SFX: true,
-  BGM: true,
+  SFX_Mute: false,
+  BGM_Mute: false,
   play_sfx: function (file_name) {
    if (!Ame.Audio.SFX) { return }
    let a = new Audio("/audio/"+file_name+".wav")

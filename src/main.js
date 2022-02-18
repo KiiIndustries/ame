@@ -4,7 +4,7 @@ const CONFIG = {
     WIDTH:  0x300,
     FPS:    0x010,
     CAT:    0x00c, // How many categories
-    OPT:    0x009, // How many options per category
+    OPT:    0x006, // How many options per category
 }
 // Loading details
 let Loading = 0
@@ -273,7 +273,7 @@ const Traits = {
                 element.image.height = image.height
                 let imgctx = element.image.getContext("2d")
                 imgctx.drawImage(image, 0, 0)
-                element.palette = template.palette || Utils.palGen(element.canvas) 
+                element.palette = Utils.palGen(element.canvas) 
                 Loading -= 1
             }
         },
@@ -900,7 +900,9 @@ const make_composite = function (tag) {
     let slides = []
     for (e in Elements) {
         let element = Elements[e]
-        if (element.name.slice(0,2) != tag) {
+        if (element.name.slice(0,2) != tag &&
+          element.name.slice(0,2) != "bo"
+        ) {
             continue
         }
         slides.push(element.image)
@@ -1398,12 +1400,12 @@ Elements.push(
     MUS_BT,
     SAV_BT,
     // Character Second
-    new Layer("ja_b_jc"),
-    new Layer("ja_b_st"),
     new Layer('ht_b_hc'),
     new Layer('ht_b_st'),
     new Layer('ha_b_ha'),
     new Layer('ha_b_st'),
+    new Layer("ja_b_jc"),
+    new Layer("ja_b_st"),
     new Layer('sh_b_sc'),
     new Layer('sh_b_st'),
     new Layer('ea_b_sk'),
